@@ -76,7 +76,9 @@ actions = {
     });
   },
 
-  // TODO: Ajouter les autres actions...
+  apropos(){
+    alert("Traducteur - Application Web \n Auteur(s) : \n SORIMOUTOU Lenaick\n RODRIGUES Nicolas\n");
+  }
 };
 
 //-------------------------------------------------------------------- Model ---
@@ -167,10 +169,15 @@ state = {
   // et demande son affichage.
   samRepresent(model) {
     let representation = '';
+    let container = '';
+
+    let tabsUI = view.tabsUI(model,state);
+    container += tabsUI;
 
     let headerUI = view.headerUI(model,state);
-
+    let containerUI = view.containerUI(model,state,container);
     representation += headerUI;
+    representation += containerUI;
 
     // TODO: la représentation de l'interface est différente selon
     //       qu'on affiche l'onglet 'Traductions' (avec formulaire de traduction)
@@ -208,11 +215,63 @@ view = {
         <div class="col-6">
           <h1>Traducteur</h1>
         </div>
-        ...
+        <div class="col-6 text-right align-middle">
+          <div class="btn-group mt-2">
+            <button class="btn btn-primary">Charger</button>
+            <button class="btn btn-ternary">Enregistrer</button>
+            <button class="btn btn-secondary">Préférences</button>
+            <button class="btn btn-primary" onclick="actions.apropos()" >À propos</button>
+          </div>
+        </div>
       </div>
     </section>
     `;
   },
 
+  containerUI(model,state,container) {
+    return `<div class="container"> 
+    ${container}
+    </div>`;
+
+  },
+
+  tabsUI(model,state){
+    return`<section id="tabs">
+      <div class="row justify-content-start ml-1 mr-1">
+        <ul class="nav nav-tabs">
+          <li class="nav-item">
+            <a class="nav-link active"
+              href="#">Traductions
+              <span class="badge badge-primary">4</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link " href="#">Français
+              <span class="badge badge-primary">3</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link " href="#">Anglais
+              <span class="badge badge-primary">2</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link " href="#">Arabe
+              <span class="badge badge-primary">1</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <select class="custom-select" id="selectFrom">
+              <option selected="selected" value="0">Autre langue...</option>
+              <option value="es">Espagnol (1)</option>
+              <option value="it">Italien (1)</option>
+            </select>
+          </li>
+        </ul>
+      </div>
+    </section>
+    <br /> 
+    `
+  },
 
 };
