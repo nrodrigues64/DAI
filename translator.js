@@ -130,6 +130,9 @@ actions = {
   },
 
   //----------Action Requête---------
+  requestChange(data){
+  	model.samPresent({do:'requestChange'});
+  },
   requestChoice(data){
   	let value = data.e.target.value;
   	let part = data.part;
@@ -174,6 +177,7 @@ model = {
     langDst: '',
     expression: '',
     disable : false,
+    disable2 : false,
   },
   translations: {
     values:[
@@ -237,10 +241,13 @@ model = {
       	else{
       		this.request.langDst = data.value;
       	}
-      	
-      	this.request.disable = (this.request.langSrc == this.request.langDst);
+      	this.request.disable = (this.request.langSrc == this.request.langDst)
+      	this.request.disable2 = (this.request.langSrc == this.request.langDst || ! this.request.languagesSrc.includes(this.request.langDst));
       	break;
 
+      case 'requestChange' : 
+      	[this.request.langSrc, this.request.langDst] = [this.request.langDst,this.request.langSrc];
+      	break;
       case 'addTrad':
       	this.request.expression = data.text
       	googleTranslation(data.text, this.request.langSrc, this.request.langDst, actions.display);
@@ -404,6 +411,7 @@ view = {
 
   requestUI(model,state){
   	let disable = (model.request.disable)? `disabled = 'disabled'` : ``;
+  	let disable2 = (model.request.disable2)? `disabled = 'disabled'` : ``;
   	let selected = `selected="selected"`
   	let indexSrc = model.request.languagesSrc.indexOf(model.request.langSrc);
   	let indexDst = model.request.languagesDst.indexOf(model.request.langDst);
@@ -428,7 +436,7 @@ view = {
                 </div>
               </div>
               <div class="form-group col-sm-1 col-2">
-                <button class="btn btn-secondary" type="button" ${disable}>⇄</button>
+                <button class="btn btn-secondary" type="button" onclick="actions.requestChange()" ${disable2}>⇄</button>
               </div>
               <div class="col-sm-3 col-5">
                 <div class="form-group">
