@@ -77,6 +77,20 @@ function compare(a, b) {
   return 0;
 }
 
+function divideArray(myArray, tab_size){
+    let index = 0;
+    let arrayLength = myArray.length;
+    let tempArray = [];
+    let myChunk =  [];
+    for (index = 0; index < arrayLength; index += tab_size) {
+        myChunk = myArray.slice(index, index+tab_size);
+        // Do something if you want with the group
+        tempArray.push(myChunk);
+    }
+
+    return tempArray;
+}
+
 //------------------------------------------------------------------ Données ---
 
 
@@ -107,6 +121,7 @@ actions = {
       languagesSrc: data.languagesSrc,
       languagesDst: data.languagesDst,
       translations: data.translations,
+
     });
   },
 
@@ -121,7 +136,7 @@ actions = {
   //-----------Action Onglet-----------
 
   onglet(data){
-  	let bool = (data.part == 1)? false : true; 
+  	let bool = (data.part == 1)? false : true;
   	model.samPresent({do:'onglet',bool: bool});
   },
 
@@ -151,9 +166,27 @@ actions = {
       model.samPresent({do : 'display', trad : data.translatedExpr });
     } else {
       console.log('Service de traduction indisponible...');
-      odel.samPresent({do : 'display', trad : data.expression});
+      model.samPresent({do : 'display', trad : data.expression});
     }
-  }
+  },
+
+  //----------Action Pagination---------
+  nombreLigne(data){
+    let tab = divideArray(model.translations.values,parseInt(data.e.target.value));
+    model.samPresent({do : 'nombreLigne', nbLigne : parseInt(data.e.target.value), tab : tab});
+  },
+
+  goPage(data){
+    model.samPresent({do : 'goPage', indexPage : data.index});
+  },
+
+  pageChange(data){
+    model.samPresent({do : 'pageChange', nature : data.nature});
+  },
+
+  triTab(data){
+
+  },
 
 };
 
@@ -186,11 +219,18 @@ model = {
   },
   sorted: {
     // TODO: propriétés pour trier les colonnes
+    onActive:false,
+
   },
   marked: {
     // TODO: propriétés pour les lignes marquées pour suppression
   },
   pagination: {
+    lignes : '',
+    values : [],
+    active :'',
+    nbPage :'',
+
     // TODO: propriétés pour gérer la pagination
   },
   app: {
@@ -214,6 +254,10 @@ model = {
         this.request.langSrc = data.langSrc;
         this.request.langDst = data.langDst;
         this.translations.values = data.translations;
+        this.pagination.values = divideArray(this.translations.values, 9);
+        this.pagination.lignes = 9;
+        this.pagination.active = 1;
+        this.pagination.nbPage = 1;
         break;
 
       case 'initLen':
@@ -221,8 +265,8 @@ model = {
       		this.tabs.tableau[i].len = len({tab : this.translations.values, lang :this.tabs.tableau[i].sq});
       }
       break;
-      	
-      case 'onglet':  
+
+      case 'onglet':
       	this.tabs.tableau.sort(compare)
       	this.tabs.posdeux = data.bool ;
       	this.tabs.posAutres = false;
@@ -245,7 +289,7 @@ model = {
       	this.request.disable2 = (this.request.langSrc == this.request.langDst || ! this.request.languagesSrc.includes(this.request.langDst));
       	break;
 
-      case 'requestChange' : 
+      case 'requestChange' :
       	[this.request.langSrc, this.request.langDst] = [this.request.langDst,this.request.langSrc];
       	break;
       case 'addTrad':
@@ -253,10 +297,29 @@ model = {
       	googleTranslation(data.text, this.request.langSrc, this.request.langDst, actions.display);
       	break;
 
-      case 'display' : 
+      case 'display' :
       	this.translations.values.push([this.request.langSrc, this.request.expression,this.request.langDst, data.trad]);
+        this.pagination.values = divideArray(this.translations.values,this.pagination.lignes);
+        this.pagination.nbPage = model.pagination.values.map((v,i,a)=>{this.pagination.nbPage += 1;});
+
+        console.log(this.pagination.nbPage);
       	actions.initLen();
       	break;
+
+      case 'nombreLigne' :
+        this.pagination.lignes = data.nbLigne;
+        this.pagination.values = data.tab;
+        console.log(this.pagination.lignes);
+        break;
+
+      case 'goPage' :
+        this.pagination.active = data.indexPage;
+        break;
+
+      case 'pageChange' :
+        this.pagination.active= (data.nature == "prec")? this.pagination.active-1:this.pagination.active+1;
+
+        break;
 
       default:
         console.error(`model.samPresent(), unknown do: '${data.do}' `);
@@ -352,7 +415,7 @@ view = {
   },
 
   containerUI(model,state,container) {
-    return `<div class="container"> 
+    return `<div class="container">
     ${container}
     </div>`;
 
@@ -360,7 +423,7 @@ view = {
 
   tabsUI(model,state){
 
-  
+
   	let sortedLang = model.tabs.tableau;
 
   	let t = model.translations.values.length;
@@ -405,7 +468,7 @@ view = {
         </ul>
       </div>
     </section>
-    <br /> 
+    <br />
     `
   },
 
@@ -417,7 +480,7 @@ view = {
   	let indexDst = model.request.languagesDst.indexOf(model.request.langDst);
 
   	let optionSrc = model.request.languagesSrc.map((v,i,a) => {return `<option value="${v}">${languages[v]}</option>`})
-  	optionSrc[indexSrc] = optionSrc[indexSrc].replace(`<option`,`<option selected="selected"`); 
+  	optionSrc[indexSrc] = optionSrc[indexSrc].replace(`<option`,`<option selected="selected"`);
   	let optionDst = model.request.languagesDst.map((v,i,a) => {return `<option value="${v}">${languages[v]}</option>`})
   	optionDst[indexDst] = optionDst[indexDst].replace(`<option`,`<option selected="selected"`);
 
@@ -464,46 +527,58 @@ view = {
 //------------------ TODO NR : Pagination------------------------
 	//--------Code HTML de la Pagination NON MODIFIE--------
    paginationUI(model,state){
+     let nbPage = model.pagination.values.map((v,i,a)=> {return (model.pagination.active == i+1)? `<li class="page-item active">
+                                                                                                      <a class="page-link" href="#">${i+1}</a>
+                                                                                                    </li>`:
+                                                                                                  `<li class="page-item ">
+                                                                                                  <a class="page-link" href="#" onclick="actions.goPage({index:${i+1}})">${i+1}</a>
+                                                                                                </li>`;});
+    let prec = (model.pagination.active == 1)? `<li class="page-item disabled">
+                                                          <a class="page-link" href="#" tabindex="-1" >Précédent</a>
+                                                        </li>`:
+                                                        `<li class="page-item ">
+                                                          <a class="page-link" href="#" tabindex="-1" onclick="actions.pageChange({nature : 'prec'})">Précédent</a>
+                                                        </li>`;
+    let suiv = (model.pagination.active == model.pagination.values.length)? `<li class="page-item disabled">
+                                                                              <a class="page-link" href="#">Suivant</a>
+                                                                            </li>`:
+                                                                            `<li class="page-item ">
+                                                                              <a class="page-link" href="#" onclick="actions.pageChange({nature : 'suiv'})">Suivant</a>
+                                                                            </li>`;
+     let pag = [3,6,9].map((v,i,a)=> {return (model.pagination.lignes==v)? `<option selected="selected" value="${v}">${v}</option>`:
+                                                                            `<option value="${v}">${v}</option>`;} );
   	return `<section id="pagination">
-          <div class="row justify-content-center">
+              <div class="row justify-content-center">
 
-            <nav class="col-auto">
-              <ul class="pagination">
-                <li class="page-item disabled">
-                  <a class="page-link" href="#" tabindex="-1">Précédent</a>
-                </li>
-                <li class="page-item active">
-                  <a class="page-link" href="#">1</a>
-                </li>
-                <li class="page-item disabled">
-                  <a class="page-link" href="#">Suivant</a>
-                </li>
-              </ul>
-            </nav>
+                <nav class="col-auto">
+                  <ul class="pagination">
+                    ${prec}
+                    ${nbPage.join('\n')}
+                    ${suiv}
+                  </ul>
+                </nav>
 
-            <div class="col-auto">
-              <div class="input-group mb-3">
-                <select class="custom-select" id="selectTo">
-                  <option value="3">3</option>
-                  <option selected="selected" value="6">6</option>
-                  <option value="9">9</option>
-                </select>
-                <div class="input-group-append">
-                  <span class="input-group-text">par page</span>
+                <div class="col-auto">
+                  <div class="input-group mb-3">
+                    <select class="custom-select" id="selectTo" onchange="actions.nombreLigne({e:event})">
+                      ${pag.join('\n')}
+                    </select>
+                    <div class="input-group-append">
+                      <span class="input-group-text">par page</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-          </div>
-        </section>`
+              </div>
+            </section>`
   },
 
 //------------------ TODO LS : translation------------------------
 	//----------Remplie le tableau ligne par ligne en fonction de données dans model--------
     tableauUI(model,state){
-    	let elt = model.translations.values.map((v,i,a) => {
+    	let elt = model.pagination.values[model.pagination.active-1].map((v,i,a) => {
     		return`<tr>
-              <td class="text-center text-secondary"> ${i} </td>
+              <td class="text-center text-secondary"> ${(model.pagination.active==1)? i:i+model.pagination.lignes*(model.pagination.active-1)} </td>
               <td class="text-center">
                 <span class="badge badge-info">${v[0]}</span>
               </td>
@@ -518,11 +593,11 @@ view = {
                 </div>
               </td>
             </tr>`
-          }) 
+          })
     	return`<table class="col-12 table table-sm table-bordered">
             <thead>
               <th class="align-middle text-center col-1">
-                <a href="#">N°</a>
+                <a href="#" onclick="triTab({col : 'num', tri : 'croi'})" ondblclick="triTab({col : 'num',tri : 'dec'})">N°</a>
               </th>
               <th class="align-middle text-center col-1">
                 <a href="#">Depuis</a>
