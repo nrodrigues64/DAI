@@ -190,7 +190,7 @@ actions = {
         if (confirm("Êtes - vous sûr de vouloir supprimer \n toutes les traductions ?")) {
             model.samPresent({ do: 'removeAll' })
         }
-       
+
     },
     selected(data) {
         model.samPresent({ do: 'selected', index: data.index})
@@ -234,7 +234,6 @@ model = {
 
     },
     marked: {
-        marke: [],
         onMarke: false,
         selected : [],
     },
@@ -271,7 +270,7 @@ model = {
                 this.pagination.lignes = 9;
                 this.pagination.active = 1;
                 this.pagination.nbPage = 1;
-                this.marked.selected = [false, false, false, false];
+                this.marked.selected = [{index :0, selected : false}, {index :1, selected : false}, {index :2, selected : false}, {index :3, selected : false}];
                 break;
 
             case 'initLen':
@@ -344,24 +343,38 @@ model = {
                 this.marked.selected = [];
                 break;
             case 'selected':
-                this.marked.selected[data.index] = !this.marked.selected[data.index];
-                if (this.marked.selected[data.index]) {
-                    this.marked.marke.push(data.index);
+
+                this.marked.selected[data.index].selected = !this.marked.selected[data.index].selected;
+                for( let j = 0 ; j< this.marked.selected.length; j++){
+                  if(this.marked.selected[j].selected == true){
                     this.marked.onMarke = true;
+                    break;
+                  }
+                  this.marked.onMarke = false;
+
                 }
-                else {
-                    this.marked.marke.splice(data.index, 1);
-                    console.log(this.marked.marke)
-                }
-                    
                 break;
+
             case 'sup':
-                for (let i = 0; i < this.marked.marke.length; i++) {
-                    this.translations.values.splice(this.marked.marke[i], 1);
-                    this.marked.selected.splice(this.marked.marke[i], 1);
+                let tabIndex = [];
+                let filter = this.marked.selected.filter((v,i,a) => v.selected)
+
+                for (let i = 0; i < this.marked.selected.length; i++) {
+                  if(this.marked.selected[i].selected)
+                    tabIndex.push(this.marked.selected[i].index);
                 }
-                this.pagination.values = divideArray(this.translations.values, this.pagination.lignes);
                 this.marked.onMarke = false;
+                for (let i = 0; i < filter.length; i++) {
+                    this.translations.values.splice(filter[i].index, 1);
+                }
+
+                this.pagination.values = divideArray(this.translations.values, this.pagination.lignes);
+                console.log(filter);
+
+                for (let i = 0; i < tabIndex.length; i++) {
+                    this.marked.selected.splice(tabIndex[i], 1);
+                }
+                console.log(this.marked.selected)
                 break;
             default:
                 console.error(`model.samPresent(), unknown do: '${data.do}' `);
@@ -618,7 +631,7 @@ view = {
     //------------------ TODO LS : translation------------------------
     //----------Remplie le tableau ligne par ligne en fonction de données dans model--------
     tableauUI(model, state) {
-        let activeSup = (model.marked.onMarke) ? `class="btn btn-secondary"` : `class="btn btn-ternary"`;
+        let activeSup = (model.marked.onMarke) ? `onclick ="actions.sup()" class="btn btn-secondary"` : `class="btn btn-ternary"`;
         let disable = (model.pagination.values.length == 0) ? `class="btn btn-ternary"` : `onclick="actions.removeAll({})" class="btn btn-secondary" `;
         let elt = (model.pagination.values.length == 0)?  [] : model.pagination.values[model.pagination.active - 1].map((v, i, a) => {
             return `<tr>
@@ -633,7 +646,7 @@ view = {
               <td>${v[3]}</td>
               <td class="text-center">
                 <div class="form-check">
-                  <input type="checkbox" ${(model.marked.selected[(model.pagination.active == 1) ? i : i + model.pagination.lignes * (model.pagination.active - 1)]) ? `checked="checked" `: ``}onclick = "actions.selected({index : ${(model.pagination.active == 1) ? i : i + model.pagination.lignes * (model.pagination.active - 1)}})" class="form-check-input" />
+                  <input type="checkbox" ${(model.marked.selected[(model.pagination.active == 1) ? i : i + model.pagination.lignes * (model.pagination.active - 1)].selected) ? `checked="checked" `: ``}onclick = "actions.selected({index : ${(model.pagination.active == 1) ? i : i + model.pagination.lignes * (model.pagination.active - 1)}})" class="form-check-input" />
                 </div>
               </td>
             </tr>`
@@ -657,7 +670,7 @@ view = {
               </th>
               <th class="align-middle text-center col-1">
                 <div class="btn-group">
-                  <button onclick ="actions.sup()" ${activeSup}>Suppr.</button>
+                  <button ${activeSup}>Suppr.</button>
                 </div>
               </th>
             </thead>
