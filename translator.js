@@ -356,24 +356,17 @@ model = {
                 break;
 
             case 'sup':
-                let tabIndex = [];
                 let filter = this.marked.selected.filter((v,i,a) => v.selected)
-
-                for (let i = 0; i < this.marked.selected.length; i++) {
-                  if(this.marked.selected[i].selected)
-                    tabIndex.push(this.marked.selected[i].index);
-                }
+                filter.sort(compare);
+                filter = filter.map((v,i,a) => v.index)
                 this.marked.onMarke = false;
                 for (let i = 0; i < filter.length; i++) {
-                    this.translations.values.splice(filter[i].index, 1);
+                    this.translations.values.splice(filter[i], 1);
+                    this.marked.selected.splice(filter[i], 1);
+                    this.marked.selected.map((v,i,a) => v.index = i)
+                    filter = filter.map((v,i,a) => v-1)
                 }
-
                 this.pagination.values = divideArray(this.translations.values, this.pagination.lignes);
-                console.log(filter);
-
-                for (let i = 0; i < tabIndex.length; i++) {
-                    this.marked.selected.splice(tabIndex[i], 1);
-                }
                 console.log(this.marked.selected)
                 break;
             default:
@@ -612,7 +605,7 @@ view = {
                     ${suiv}
                   </ul>
                 </nav>
-
+ 
                 <div class="col-auto">
                   <div class="input-group mb-3">
                     <select class="custom-select" id="selectTo" onchange="actions.nombreLigne({e:event})">
@@ -657,16 +650,16 @@ view = {
                 <a href="#" onclick="triTab({col : 'num', tri : 'croi'})" ondblclick="triTab({col : 'num',tri : 'dec'})">N°</a>
               </th>
               <th class="align-middle text-center col-1">
-                <a href="#">Depuis</a>
+                <a href="#" onclick="triTab({col : 'langI', tri : 'croi'})" ondblclick="triTab({col : 'langI',tri : 'dec'})">Depuis</a>
               </th>
               <th class="align-middle text-center ">
-                <a href="#">Expression</a>
+                <a href="#" onclick="triTab({col : 'expr', tri : 'croi'})" ondblclick="triTab({col : 'expr',tri : 'dec'})">Expression</a>
               </th>
               <th class="align-middle text-center col-1">
-                <a href="#">Vers</a>
+                <a href="#" onclick="triTab({col : 'langF', tri : 'croi'})" ondblclick="triTab({col : 'langF',tri : 'dec'})">Vers</a>
               </th>
               <th class="align-middle text-center ">
-                <a href="#">Traduction</a>
+                <a href="#" onclick="triTab({col : 'trad', tri : 'croi'})" ondblclick="triTab({col : 'trad',tri : 'dec'})">Traduction</a>
               </th>
               <th class="align-middle text-center col-1">
                 <div class="btn-group">
