@@ -318,7 +318,7 @@ model = {
                 this.translations.values.push([this.request.langSrc, this.request.expression, this.request.langDst, data.trad]);
                 this.pagination.values = divideArray(this.translations.values, this.pagination.lignes);
                 this.pagination.nbPage = this.pagination.values.map((v, i, a) => { this.pagination.nbPage += 1; });
-                this.marked.selected.push(false);
+                this.marked.selected.push({index : this.marked.selected.length, selected:false});
                 actions.initLen();
                 actions.onglet({ part: 1 });
                 break;
@@ -364,10 +364,11 @@ model = {
                     this.translations.values.splice(filter[i], 1);
                     this.marked.selected.splice(filter[i], 1);
                     this.marked.selected.map((v,i,a) => v.index = i)
+
                     filter = filter.map((v,i,a) => v-1)
                 }
                 this.pagination.values = divideArray(this.translations.values, this.pagination.lignes);
-                console.log(this.marked.selected)
+                if(this.pagination.values[this.pagination.active] == undefined){this.pagination.active -= 1;}
                 break;
             default:
                 console.error(`model.samPresent(), unknown do: '${data.do}' `);
@@ -605,7 +606,7 @@ view = {
                     ${suiv}
                   </ul>
                 </nav>
- 
+
                 <div class="col-auto">
                   <div class="input-group mb-3">
                     <select class="custom-select" id="selectTo" onchange="actions.nombreLigne({e:event})">
