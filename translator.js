@@ -326,6 +326,7 @@ model = {
             case 'nombreLigne':
                 this.pagination.lignes = data.nbLigne;
                 this.pagination.values = data.tab;
+                model.pagination.active = 1;
                 console.log(this.pagination.lignes);
                 break;
 
