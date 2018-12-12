@@ -367,8 +367,10 @@ model = {
 
                     filter = filter.map((v,i,a) => v-1)
                 }
-                this.pagination.values = divideArray(this.translations.values, this.pagination.lignes);
-                if(this.pagination.values[this.pagination.active] == undefined){this.pagination.active -= 1;}
+                this.pagination.values = divideArray(this.translations.values, this.pagination.lignes);    
+                if (this.pagination.values[this.pagination.active - 1] == undefined) {
+                    this.pagination.active -= (this.pagination.active == 1) ? 0 : 1;
+                }
                 break;
             default:
                 console.error(`model.samPresent(), unknown do: '${data.do}' `);
@@ -480,7 +482,7 @@ view = {
             </a>
           </li>`: ``;
         let li = sortedLang.map((v, i, a) => {
-            if (len({ tab: model.translations.values, lang: sortedLang[i].sq }) != 0 && i > 0) {
+            if (len({ tab: model.translations.values, lang: sortedLang[i].sq }) != 0 && i > 0 && i<3) {
                 return `<li class="nav-item">
             <a class="nav-link" href="#" onclick="actions.ongletChange({index: ${i}})" >${sortedLang[i].lang}
               <span class="badge badge-primary">${len({ tab: model.translations.values, lang: sortedLang[i].sq })}</span>
@@ -627,6 +629,7 @@ view = {
     tableauUI(model, state) {
         let activeSup = (model.marked.onMarke) ? `onclick ="actions.sup()" class="btn btn-secondary"` : `class="btn btn-ternary"`;
         let disable = (model.pagination.values.length == 0) ? `class="btn btn-ternary"` : `onclick="actions.removeAll({})" class="btn btn-secondary" `;
+        console.log(model.pagination.values);
         let elt = (model.pagination.values.length == 0)?  [] : model.pagination.values[model.pagination.active - 1].map((v, i, a) => {
             return `<tr>
               <td class="text-center text-secondary"> ${(model.pagination.active == 1) ? i : i + model.pagination.lignes * (model.pagination.active - 1)} </td>
