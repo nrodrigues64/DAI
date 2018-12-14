@@ -184,7 +184,7 @@ actions = {
     },
 
     triTab(data) {
-
+        model.samPresent({ do: 'triTab', part: data.col})
     },
     removeAll() {
         if (confirm("Êtes - vous sûr de vouloir supprimer \n toutes les traductions ?")) {
@@ -231,11 +231,14 @@ model = {
     sorted: {
         // TODO: propriétés pour trier les colonnes
         onActive: false,
+        values: [],
+        index : [],
 
     },
     marked: {
         onMarke: false,
-        selected : [],
+        selected: [],
+        num : false,
     },
     pagination: {
         lignes: '',
@@ -372,6 +375,38 @@ model = {
                 if (this.pagination.values[this.pagination.active - 1] == undefined) {
                     this.pagination.active -= (this.pagination.active == 1) ? 0 : 1;
                 }
+                break;
+            case 'triTab':  
+
+                if (data.part == "num" && !this.sorted.num) {
+                    this.sorted.num = !this.sorted.num
+                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values.reverse()
+                    this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
+                    console.log("test")
+                }
+                else if (data.part == "num" && this.sorted.num) {
+                    this.sorted.num = !this.sorted.num
+                    this.sorted.values = this.sorted.values;
+                    this.sorted.values.reverse()
+                    this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
+                }
+                else if (data.part == "langI" && !this.sorted.onActive) {
+                    this.sorted.onActive = !this.sorted.onActive
+                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values.sort((a, b) => a[0] > b[0] )
+                    this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
+                }
+                else if (data.part == "langI" && this.sorted.onActive) {
+                    this.sorted.onActive = !this.sorted.onActive
+                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values.sort((a, b) => a[0] < b[0])
+                    this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
+                }
+                else {
+                    this.pagination.values = divideArray(this.translations.values, this.pagination.lignes); 
+                }
+                
                 break;
             default:
                 console.error(`model.samPresent(), unknown do: '${data.do}' `);
@@ -630,10 +665,11 @@ view = {
     tableauUI(model, state) {
         let activeSup = (model.marked.onMarke) ? `onclick ="actions.sup()" class="btn btn-secondary"` : `class="btn btn-ternary"`;
         let disable = (model.pagination.values.length == 0) ? `class="btn btn-ternary"` : `onclick="actions.removeAll({})" class="btn btn-secondary" `;
+        let Ar = model.translations.values
         console.log(model.pagination.values);
         let elt = (model.pagination.values.length == 0)?  [] : model.pagination.values[model.pagination.active - 1].map((v, i, a) => {
             return `<tr>
-              <td class="text-center text-secondary"> ${(model.pagination.active == 1) ? i : i + model.pagination.lignes * (model.pagination.active - 1)} </td>
+              <td class="text-center text-secondary"> ${Ar.indexOf(v)} </td>
               <td class="text-center">
                 <span class="badge badge-info">${v[0]}</span>
               </td>
@@ -652,10 +688,10 @@ view = {
         return `<table class="col-12 table table-sm table-bordered">
             <thead>
               <th class="align-middle text-center col-1">
-                <a href="#" onclick="triTab({col : 'num', tri : 'croi'})" ondblclick="triTab({col : 'num',tri : 'dec'})">N°</a>
+                <a href="#" onclick="actions.triTab({col : 'num',})" >N°</a>
               </th>
               <th class="align-middle text-center col-1">
-                <a href="#" onclick="triTab({col : 'langI', tri : 'croi'})" ondblclick="triTab({col : 'langI',tri : 'dec'})">Depuis</a>
+                <a href="#" onclick="actions.triTab({col : 'langI', tri : 'croi'})" ondblclick="triTab({col : 'langI',tri : 'dec'})">Depuis</a>
               </th>
               <th class="align-middle text-center ">
                 <a href="#" onclick="triTab({col : 'expr', tri : 'croi'})" ondblclick="triTab({col : 'expr',tri : 'dec'})">Expression</a>
