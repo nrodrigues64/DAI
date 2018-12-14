@@ -230,7 +230,7 @@ model = {
     },
     sorted: {
         // TODO: propriétés pour trier les colonnes
-        onActive: false,
+        langI: false,
         values: [],
         index : [],
 
@@ -324,6 +324,14 @@ model = {
                 this.marked.selected.push({index : this.marked.selected.length, selected:false});
                 actions.initLen();
                 actions.onglet({ part: 1 });
+                if (this.sorted.num) {
+                    this.sorted.num = false;
+                    actions.triTab({col:'num'})
+                }
+                if (this.sorted.langI) {
+                    this.sorted.langI = false;
+                    actions.triTab({ col: 'langI' })
+                }
                 break;
 
             case 'nombreLigne':
@@ -387,18 +395,18 @@ model = {
                 }
                 else if (data.part == "num" && this.sorted.num) {
                     this.sorted.num = !this.sorted.num
-                    this.sorted.values = this.sorted.values;
-                    this.sorted.values.reverse()
+                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values.reverse().reverse()
                     this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
                 }
-                else if (data.part == "langI" && !this.sorted.onActive) {
-                    this.sorted.onActive = !this.sorted.onActive
+                else if (data.part == "langI" && !this.sorted.langI) {
+                    this.sorted.langI = !this.sorted.langI
                     this.sorted.values = this.translations.values.slice();
                     this.sorted.values.sort((a, b) => a[0] > b[0] )
                     this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
                 }
-                else if (data.part == "langI" && this.sorted.onActive) {
-                    this.sorted.onActive = !this.sorted.onActive
+                else if (data.part == "langI" && this.sorted.langI) {
+                    this.sorted.langI = !this.sorted.langI
                     this.sorted.values = this.translations.values.slice();
                     this.sorted.values.sort((a, b) => a[0] < b[0])
                     this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
