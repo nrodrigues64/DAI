@@ -171,7 +171,7 @@ actions = {
 
     //----------Action Pagination---------
     nombreLigne(data) {
-        let tab = divideArray(model.tabs.tabFilt, parseInt(data.e.target.value));
+        let tab = divideArray(model.translations.values, parseInt(data.e.target.value));
         model.samPresent({ do: 'nombreLigne', nbLigne: parseInt(data.e.target.value), tab: tab });
     },
 
@@ -223,6 +223,7 @@ model = {
         expression: '',
         disable: false,
         disable2: false,
+        index : [],
     },
     translations: {
         values: [
@@ -278,7 +279,7 @@ model = {
                 this.pagination.lignes = 9;
                 this.pagination.active = 1;
                 this.pagination.nbPage = 1;
-                this.marked.selected = [{index :0, selected : false}, {index :1, selected : false}, {index :2, selected : false}, {index :3, selected : false}];
+                this.marked.selected = [{ index: 0, selected: false }, { index: 1, selected: false }, { index: 2, selected: false }, { index: 3, selected: false }];
                 break;
 
             case 'initLen':
@@ -288,24 +289,85 @@ model = {
                 break;
 
             case 'onglet':
-                console.log(this.translations.values);
+                this.pagination.active = 1;
                 this.tabs.tableau.sort(compare)
                 this.tabs.posdeux = data.bool;
                 this.tabs.posAutres = false;
-                if(this.tabs.posdeux){
-                  this.tabs.tabFilt =  this.translations.values.filter((v, i, a) => v[0] == this.tabs.tableau[data.part - 2].sq || v[2] == this.tabs.tableau[data.part - 2].sq);
+                this.tabs.tabFilt = [];
+                let aux1;
+                let aux2;    
+                if (this.tabs.posdeux) {
+                    this.request.index = []
+                    for (let i = 0; i < this.translations.values.length; i++) {
+                        if (this.translations.values[i][0] == this.tabs.tableau[data.part - 2].sq || this.translations.values[i][2] == this.tabs.tableau[data.part - 2].sq) {
+                            model.tabs.tabFilt.push(this.translations.values[i])
+                            if (this.translations.values[i][2] == this.tabs.tableau[data.part - 2].sq) {
+                                aux1 = this.tabs.tabFilt[i][0];
+                                aux2 = this.tabs.tabFilt[i][1];
+                                this.tabs.tabFilt[i][0] = this.tabs.tabFilt[i][2];
+                                this.tabs.tabFilt[i][1] = this.tabs.tabFilt[i][3];
+                                this.tabs.tabFilt[i][2] = aux1;
+                                this.tabs.tabFilt[i][3] = aux2;
+                                this.request.index.push(i);
+                            }
+                            
+                        }
+                    }
                 }
-                else{
-                  this.tabs.tabFilt = this.translations.values.slice();
+                else {
+                    this.tabs.tabFilt = this.translations.values;
+                    if (this.request.index.length > 0) {
+                        for (let k = 0; k < this.request.index.length; k++) {
+                            aux1 = this.tabs.tabFilt[this.request.index[k]][0];
+                            aux2 = this.tabs.tabFilt[this.request.index[k]][1];
+                            this.tabs.tabFilt[this.request.index[k]][0] = this.tabs.tabFilt[this.request.index[k]][2];
+                            this.tabs.tabFilt[this.request.index[k]][1] = this.tabs.tabFilt[this.request.index[k]][3];
+                            this.tabs.tabFilt[this.request.index[k]][2] = aux1;
+                            this.tabs.tabFilt[this.request.index[k]][3] = aux2;
+                        }
+                        this.request.index = [];
+                    }
                 }
                 this.pagination.values = divideArray(this.tabs.tabFilt, this.pagination.lignes);
                 break;
 
             case 'ongletChange':
+                this.pagination.active = 1;
                 [this.tabs.tableau[0], this.tabs.tableau[data.index]] = [this.tabs.tableau[data.index], this.tabs.tableau[0]];
                 this.tabs.posdeux = true;
                 this.tabs.posAutres = true;
-                this.tabs.tabFilt = (this.tabs.posdeux) ? this.translations.values.filter((v, i, a) => v[0] == this.tabs.tableau[0].sq || v[2] == this.tabs.tableau[0].sq) : this.translations.values.slice();
+                let auxi1;
+                let auxi2;
+                this.tabs.tabFilt = this.translations.values;
+                if (this.request.index.length > 0) {
+                    for (let k = 0; k < this.request.index.length; k++) {
+                        auxi1 = this.tabs.tabFilt[this.request.index[k]][0];
+                        auxi2 = this.tabs.tabFilt[this.request.index[k]][1];
+                        this.tabs.tabFilt[this.request.index[k]][0] = this.tabs.tabFilt[this.request.index[k]][2];
+                        this.tabs.tabFilt[this.request.index[k]][1] = this.tabs.tabFilt[this.request.index[k]][3];
+                        this.tabs.tabFilt[this.request.index[k]][2] = auxi1;
+                        this.tabs.tabFilt[this.request.index[k]][3] = auxi2;
+                    }
+                    this.request.index = [];
+                }
+                this.tabs.tabFilt = [];
+                if (this.tabs.posdeux) {
+                    for (let k = 0; k < this.translations.values.length; k++) {
+                        if (this.translations.values[k][0] == this.tabs.tableau[0].sq || this.translations.values[k][2] == this.tabs.tableau[0].sq) {
+                            this.tabs.tabFilt.push(this.translations.values[k])
+                            if (this.translations.values[k][2] == this.tabs.tableau[0].sq) {
+                                auxi1 = this.translations.values[k][0];
+                                auxi2 = this.translations.values[k][1];
+                                this.translations.values[k][0] = this.translations.values[k][2];
+                                this.translations.values[k][1] = this.translations.values[k][3];
+                                this.translations.values[k][2] = auxi1;
+                                this.translations.values[k][3] = auxi2;
+                                this.request.index.push(k);
+                            }
+
+                        }
+                    }
+                }
                 this.pagination.values = divideArray(this.tabs.tabFilt, this.pagination.lignes);
                 break;
 
@@ -347,8 +409,14 @@ model = {
 
             case 'nombreLigne':
                 this.pagination.lignes = data.nbLigne;
-                this.pagination.values = data.tab;
-                model.pagination.active = 1;
+                if (this.tabs.posdeux) {
+                    this.pagination.values = divideArray(this.tabs.tabFilt, this.pagination.lignes);
+                }
+                else {
+                    this.pagination.values = data.tab;
+                }
+                
+                this.pagination.active = 1;
                 break;
 
             case 'goPage':
@@ -360,10 +428,24 @@ model = {
 
                 break;
             case 'removeAll':
-                this.translations.values = [];
-                this.pagination.values = [];
-                this.marked.selected = [];
-                this.marked.onMarke = false;
+                if (this.tabs.posdeux) {
+                    this.marked.selected = [];
+                    this.translations.values = this.translations.values.filter((v, i, a) => v[0] != this.tabs.tableau[0].sq && v[2] != this.tabs.tableau[0].sq)
+                    this.marked.selected = this.translations.values.map((v, i, a) => { return({ index: i, selected: false }) } )
+                    this.pagination.values = divideArray(this.translations.values, this.pagination.lignes);
+                    this.tabs.posdeux = false;
+                    this.marked.onMarke = false;
+                    this.request.index.length = [];
+                    actions.onglet({ part: 1 })
+                }
+                else {
+                    this.translations.values = [];
+                    this.pagination.values = [];
+                    this.marked.selected = [];
+                    this.request.index.length = [];
+                    this.marked.onMarke = false;
+                }
+                
                 break;
             case 'selected':
 
@@ -393,6 +475,9 @@ model = {
                 this.pagination.values = divideArray(this.translations.values, this.pagination.lignes);
                 if (this.pagination.values[this.pagination.active - 1] == undefined) {
                     this.pagination.active -= (this.pagination.active == 1) ? 0 : 1;
+                }
+                if (this.tabs.posdeux) {
+                    actions.onglet({ part: 2 })
                 }
                 break;
             case 'triTab':
@@ -733,7 +818,7 @@ view = {
               <td>${v[3]}</td>
               <td class="text-center">
                 <div class="form-check">
-                  <input type="checkbox" ${(model.marked.selected[(model.pagination.active == 1) ? i : i + model.pagination.lignes * (model.pagination.active - 1)].selected) ? `checked="checked" `: ``}onclick = "actions.selected({index : ${(model.pagination.active == 1) ? i : i + model.pagination.lignes * (model.pagination.active - 1)}})" class="form-check-input" />
+                  <input type="checkbox" ${(model.marked.selected[Ar.indexOf(v)].selected) ? `checked="checked" ` : ``}onclick = "actions.selected({index : ${Ar.indexOf(v)}})" class="form-check-input" />
                 </div>
               </td>
             </tr>`
