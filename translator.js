@@ -231,6 +231,10 @@ model = {
     sorted: {
         // TODO: propriétés pour trier les colonnes
         langI: false,
+        num : false,
+        vers: false,
+        exp: false,
+        trad: false,
         values: [],
         index : [],
 
@@ -238,7 +242,7 @@ model = {
     marked: {
         onMarke: false,
         selected: [],
-        num : false,
+
     },
     pagination: {
         lignes: '',
@@ -283,10 +287,17 @@ model = {
                 break;
 
             case 'onglet':
+                console.log(this.translations.values);
                 this.tabs.tableau.sort(compare)
                 this.tabs.posdeux = data.bool;
                 this.tabs.posAutres = false;
-                let temp1 = (this.tabs.posdeux) ? this.translations.values.filter((v, i, a) => v[0] == this.tabs.tableau[data.part - 2].sq || v[2] == this.tabs.tableau[data.part - 2].sq) : this.translations.values;
+                let temp1;
+                if(this.tabs.posdeux){
+                  temp1 =  this.translations.values.filter((v, i, a) => v[0] == this.tabs.tableau[data.part - 2].sq || v[2] == this.tabs.tableau[data.part - 2].sq);
+                }
+                else{
+                  temp1 = this.translations.values.slice();
+                }
                 this.pagination.values = divideArray(temp1, this.pagination.lignes);
                 break;
 
@@ -294,7 +305,7 @@ model = {
                 [this.tabs.tableau[0], this.tabs.tableau[data.index]] = [this.tabs.tableau[data.index], this.tabs.tableau[0]];
                 this.tabs.posdeux = true;
                 this.tabs.posAutres = true;
-                let temp2 = (this.tabs.posdeux) ? this.translations.values.filter((v, i, a) => v[0] == this.tabs.tableau[0].sq || v[2] == this.tabs.tableau[0].sq) : this.translations.values;
+                let temp2 = (this.tabs.posdeux) ? this.translations.values.filter((v, i, a) => v[0] == this.tabs.tableau[0].sq || v[2] == this.tabs.tableau[0].sq) : this.translations.values.slice();
                 this.pagination.values = divideArray(temp2, this.pagination.lignes);
                 break;
 
@@ -338,7 +349,6 @@ model = {
                 this.pagination.lignes = data.nbLigne;
                 this.pagination.values = data.tab;
                 model.pagination.active = 1;
-                console.log(this.pagination.lignes);
                 break;
 
             case 'goPage':
@@ -353,6 +363,7 @@ model = {
                 this.translations.values = [];
                 this.pagination.values = [];
                 this.marked.selected = [];
+                this.marked.onMarke = false;
                 break;
             case 'selected':
 
@@ -379,19 +390,18 @@ model = {
 
                     filter = filter.map((v,i,a) => v-1)
                 }
-                this.pagination.values = divideArray(this.translations.values, this.pagination.lignes);    
+                this.pagination.values = divideArray(this.translations.values, this.pagination.lignes);
                 if (this.pagination.values[this.pagination.active - 1] == undefined) {
                     this.pagination.active -= (this.pagination.active == 1) ? 0 : 1;
                 }
                 break;
-            case 'triTab':  
+            case 'triTab':
 
                 if (data.part == "num" && !this.sorted.num) {
                     this.sorted.num = !this.sorted.num
                     this.sorted.values = this.translations.values.slice();
                     this.sorted.values.reverse()
                     this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
-                    console.log("test")
                 }
                 else if (data.part == "num" && this.sorted.num) {
                     this.sorted.num = !this.sorted.num
@@ -411,10 +421,46 @@ model = {
                     this.sorted.values.sort((a, b) => a[0] < b[0])
                     this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
                 }
-                else {
-                    this.pagination.values = divideArray(this.translations.values, this.pagination.lignes); 
+                else if (data.part == "exp" && !this.sorted.exp) {
+                    this.sorted.exp = !this.sorted.exp
+                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values.sort((a, b) => a[1] > b[1] )
+                    this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
                 }
-                
+                else if (data.part == "exp" && this.sorted.exp) {
+                    this.sorted.exp = !this.sorted.exp
+                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values.sort((a, b) => a[1] < b[1])
+                    this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
+                }
+                else if (data.part == "vers" && !this.sorted.vers) {
+                    this.sorted.vers = !this.sorted.vers
+                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values.sort((a, b) => a[2] > b[2] )
+                    this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
+                }
+                else if (data.part == "vers" && this.sorted.vers) {
+                    this.sorted.vers = !this.sorted.vers
+                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values.sort((a, b) => a[2] < b[2])
+                    this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
+                }
+                else if (data.part == "trad" && !this.sorted.trad) {
+                    this.sorted.trad = !this.sorted.trad
+                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values.sort((a, b) => a[3] > b[3] )
+                    this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
+                }
+                else if (data.part == "trad" && this.sorted.trad) {
+                    this.sorted.trad = !this.sorted.trad
+                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values.sort((a, b) => a[3] < b[3])
+                    this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
+                }
+                else {
+                    this.pagination.values = divideArray(this.translations.values, this.pagination.lignes);
+                }
+
                 break;
             default:
                 console.error(`model.samPresent(), unknown do: '${data.do}' `);
@@ -626,13 +672,13 @@ view = {
                                                             <a class="page-link" href="#" onclick="actions.goPage({index:${i + 1}})">${i + 1}</a>
                                                         </li>`;
         });
-        let prec = (model.pagination.active == 1) ? `<li class="page-item disabled">
+        let prec = (model.pagination.active == 1 || model.translations.values.length == 0 ) ? `<li class="page-item disabled">
                                                           <a class="page-link" href="#" tabindex="-1" >Précédent</a>
                                                         </li>`:
             `<li class="page-item ">
                                                           <a class="page-link" href="#" tabindex="-1" onclick="actions.pageChange({nature : 'prec'})">Précédent</a>
                                                         </li>`;
-        let suiv = (model.pagination.active == model.pagination.values.length) ? `<li class="page-item disabled">
+        let suiv = (model.pagination.active == model.pagination.values.length || model.translations.values.length == 0 ) ? `<li class="page-item disabled">
                                                                               <a class="page-link" href="#">Suivant</a>
                                                                             </li>`:
                                                                         `<li class="page-item ">
@@ -674,14 +720,13 @@ view = {
         let activeSup = (model.marked.onMarke) ? `onclick ="actions.sup()" class="btn btn-secondary"` : `class="btn btn-ternary"`;
         let disable = (model.pagination.values.length == 0) ? `class="btn btn-ternary"` : `onclick="actions.removeAll({})" class="btn btn-secondary" `;
         let Ar = model.translations.values
-        console.log(model.pagination.values);
         let elt = (model.pagination.values.length == 0)?  [] : model.pagination.values[model.pagination.active - 1].map((v, i, a) => {
             return `<tr>
               <td class="text-center text-secondary"> ${Ar.indexOf(v)} </td>
               <td class="text-center">
                 <span class="badge badge-info">${v[0]}</span>
               </td>
-              <td>${v[1]}</td>
+              <td ${(v[0] == 'ar')? `class="text-right"`:``}>${v[1]}</td>
               <td class="text-center">
                 <span class="badge badge-info">${v[2]}</span>
               </td>
@@ -699,16 +744,16 @@ view = {
                 <a href="#" onclick="actions.triTab({col : 'num',})" >N°</a>
               </th>
               <th class="align-middle text-center col-1">
-                <a href="#" onclick="actions.triTab({col : 'langI', tri : 'croi'})" ondblclick="triTab({col : 'langI',tri : 'dec'})">Depuis</a>
+                <a href="#" onclick="actions.triTab({col : 'langI'})">Depuis</a>
               </th>
               <th class="align-middle text-center ">
-                <a href="#" onclick="triTab({col : 'expr', tri : 'croi'})" ondblclick="triTab({col : 'expr',tri : 'dec'})">Expression</a>
+                <a href="#" onclick="actions.triTab({col : 'exp'})">Expression</a>
               </th>
               <th class="align-middle text-center col-1">
-                <a href="#" onclick="triTab({col : 'langF', tri : 'croi'})" ondblclick="triTab({col : 'langF',tri : 'dec'})">Vers</a>
+                <a href="#" onclick="actions.triTab({col : 'vers'})">Vers</a>
               </th>
               <th class="align-middle text-center ">
-                <a href="#" onclick="triTab({col : 'trad', tri : 'croi'})" ondblclick="triTab({col : 'trad',tri : 'dec'})">Traduction</a>
+                <a href="#" onclick="actions.triTab({col : 'trad'})">Traduction</a>
               </th>
               <th class="align-middle text-center col-1">
                 <div class="btn-group">
