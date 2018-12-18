@@ -171,7 +171,7 @@ actions = {
 
     //----------Action Pagination---------
     nombreLigne(data) {
-        let tab = divideArray(model.translations.values, parseInt(data.e.target.value));
+        let tab = divideArray(model.tabs.tabFilt, parseInt(data.e.target.value));
         model.samPresent({ do: 'nombreLigne', nbLigne: parseInt(data.e.target.value), tab: tab });
     },
 
@@ -209,6 +209,7 @@ model = {
         posdeux: false,
         posAutres: false,
         tableau: [],
+        tabFilt: [],
         init(data) {
             this.tableau = data.items || [];
         },
@@ -291,22 +292,21 @@ model = {
                 this.tabs.tableau.sort(compare)
                 this.tabs.posdeux = data.bool;
                 this.tabs.posAutres = false;
-                let temp1;
                 if(this.tabs.posdeux){
-                  temp1 =  this.translations.values.filter((v, i, a) => v[0] == this.tabs.tableau[data.part - 2].sq || v[2] == this.tabs.tableau[data.part - 2].sq);
+                  this.tabs.tabFilt =  this.translations.values.filter((v, i, a) => v[0] == this.tabs.tableau[data.part - 2].sq || v[2] == this.tabs.tableau[data.part - 2].sq);
                 }
                 else{
-                  temp1 = this.translations.values.slice();
+                  this.tabs.tabFilt = this.translations.values.slice();
                 }
-                this.pagination.values = divideArray(temp1, this.pagination.lignes);
+                this.pagination.values = divideArray(this.tabs.tabFilt, this.pagination.lignes);
                 break;
 
             case 'ongletChange':
                 [this.tabs.tableau[0], this.tabs.tableau[data.index]] = [this.tabs.tableau[data.index], this.tabs.tableau[0]];
                 this.tabs.posdeux = true;
                 this.tabs.posAutres = true;
-                let temp2 = (this.tabs.posdeux) ? this.translations.values.filter((v, i, a) => v[0] == this.tabs.tableau[0].sq || v[2] == this.tabs.tableau[0].sq) : this.translations.values.slice();
-                this.pagination.values = divideArray(temp2, this.pagination.lignes);
+                this.tabs.tabFilt = (this.tabs.posdeux) ? this.translations.values.filter((v, i, a) => v[0] == this.tabs.tableau[0].sq || v[2] == this.tabs.tableau[0].sq) : this.translations.values.slice();
+                this.pagination.values = divideArray(this.tabs.tabFilt, this.pagination.lignes);
                 break;
 
             case 'requestChoice':
