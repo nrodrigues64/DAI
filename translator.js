@@ -156,10 +156,12 @@ actions = {
 
     changeExp(data) {
         let text = data.e.target.value;
-        model.samPresent({ do: 'changeExp', text: text });
+        model.request.expression = text;
     },
     addTrad() {
-        model.samPresent({ do: 'addTrad'});
+        if (!model.request.expression == "") {
+            model.samPresent({ do: 'addTrad' });
+        }
     },
 
     display(data) {
@@ -388,9 +390,6 @@ model = {
 
             case 'requestChange':
                 [this.request.langSrc, this.request.langDst] = [this.request.langDst, this.request.langSrc];
-                break;
-            case 'changeExp':
-                this.request.expression = data.text;
                 break;
 
             case 'addTrad':
@@ -772,7 +771,7 @@ view = {
               </div>
               <div class="col-sm-5 col-12">
                 <div class="input-group mb-3">
-                  <input value="${model.request.expression}" id="expressionText" type="text" class="form-control"  onchange="actions.changeExp({e:event})" placeholder="Expression..." />
+                  <input id="expressionText" type="text" class="form-control"  onchange="actions.changeExp({e:event})"  value="" placeholder="Expression..." />
                   <div class="input-group-append">
                     <button class="btn btn-primary" type="button" onclick="actions.addTrad()" ${disable}>Traduire</button>
                   </div>
