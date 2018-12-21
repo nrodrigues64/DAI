@@ -154,9 +154,12 @@ actions = {
         model.samPresent({ do: 'requestChoice', value: value, part: part });
     },
 
-    addTrad(data) {
+    changeExp(data) {
         let text = data.e.target.value;
-        model.samPresent({ do: 'addTrad', text: text });
+        model.samPresent({ do: 'changeExp', text: text });
+    },
+    addTrad() {
+        model.samPresent({ do: 'addTrad'});
     },
 
     display(data) {
@@ -220,7 +223,7 @@ model = {
         languagesDst: [],
         langSrc: '',
         langDst: '',
-        expression: '',
+        expression: "",
         disable: false,
         disable2: false,
         index : [],
@@ -229,6 +232,7 @@ model = {
         values: [
             // ['fr','Asperge','en','Asparagus'],
         ],
+        exp : '',
     },
     sorted: {
         // TODO: propriétés pour trier les colonnes
@@ -385,9 +389,12 @@ model = {
             case 'requestChange':
                 [this.request.langSrc, this.request.langDst] = [this.request.langDst, this.request.langSrc];
                 break;
+            case 'changeExp':
+                this.request.expression = data.text;
+                break;
+
             case 'addTrad':
-                this.request.expression = data.text
-                googleTranslation(data.text, this.request.langSrc, this.request.langDst, actions.display);
+                googleTranslation(this.request.expression, this.request.langSrc, this.request.langDst, actions.display);
                 break;
 
             case 'display':
@@ -405,6 +412,7 @@ model = {
                     this.sorted.langI = false;
                     actions.triTab({ col: 'langI' })
                 }
+                this.request.expression = "";
                 break;
 
             case 'nombreLigne':
@@ -461,6 +469,22 @@ model = {
                 break;
 
             case 'sup':
+                let au1;
+                let au2;
+                if (this.tabs.posdeux) {
+                    this.tabs.tabFilt = this.translations.values;
+                    if (this.request.index.length > 0) {
+                        for (let k = 0; k < this.request.index.length; k++) {
+                            au1 = this.tabs.tabFilt[this.request.index[k]][0];
+                            au2 = this.tabs.tabFilt[this.request.index[k]][1];
+                            this.tabs.tabFilt[this.request.index[k]][0] = this.tabs.tabFilt[this.request.index[k]][2];
+                            this.tabs.tabFilt[this.request.index[k]][1] = this.tabs.tabFilt[this.request.index[k]][3];
+                            this.tabs.tabFilt[this.request.index[k]][2] = au1;
+                            this.tabs.tabFilt[this.request.index[k]][3] = au2;
+                        }
+                        this.request.index = [];
+                    }
+                }
                 let filter = this.marked.selected.filter((v,i,a) => v.selected)
                 filter.sort(compare);
                 filter = filter.map((v,i,a) => v.index)
@@ -477,73 +501,88 @@ model = {
                     this.pagination.active -= (this.pagination.active == 1) ? 0 : 1;
                 }
                 if (this.tabs.posdeux) {
+                    if (len({ tab: this.pagination.values[this.pagination.active - 1], lang: this.tabs.tableau[0].sq }) == 0) {
+                        actions.onglet({ part: 1 })
+                        break;
+                    }
                     actions.onglet({ part: 2 })
                 }
                 break;
             case 'triTab':
+                let tab;
+                if (this.tabs.posdeux) {
+                    tab = this.tabs.tabFilt;
+                    if (data.part == "langI" ) {
+                        data.part = "num";
+                    }
+                }
+                else {
+                    tab = this.translations.values;
+                }
+                
 
                 if (data.part == "num" && !this.sorted.num) {
                     this.sorted.num = !this.sorted.num
-                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values = tab.slice();
                     this.sorted.values.reverse()
                     this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
                 }
                 else if (data.part == "num" && this.sorted.num) {
                     this.sorted.num = !this.sorted.num
-                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values = tab.slice();
                     this.sorted.values.reverse().reverse()
                     this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
                 }
                 else if (data.part == "langI" && !this.sorted.langI) {
                     this.sorted.langI = !this.sorted.langI
-                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values = tab.slice();
                     this.sorted.values.sort((a, b) => a[0] > b[0] )
                     this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
                 }
                 else if (data.part == "langI" && this.sorted.langI) {
                     this.sorted.langI = !this.sorted.langI
-                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values = tab.slice();
                     this.sorted.values.sort((a, b) => a[0] < b[0])
                     this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
                 }
                 else if (data.part == "exp" && !this.sorted.exp) {
                     this.sorted.exp = !this.sorted.exp
-                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values = tab.slice();
                     this.sorted.values.sort((a, b) => a[1] > b[1] )
                     this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
                 }
                 else if (data.part == "exp" && this.sorted.exp) {
                     this.sorted.exp = !this.sorted.exp
-                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values = tab.slice();
                     this.sorted.values.sort((a, b) => a[1] < b[1])
                     this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
                 }
                 else if (data.part == "vers" && !this.sorted.vers) {
                     this.sorted.vers = !this.sorted.vers
-                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values = tab.slice();
                     this.sorted.values.sort((a, b) => a[2] > b[2] )
                     this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
                 }
                 else if (data.part == "vers" && this.sorted.vers) {
                     this.sorted.vers = !this.sorted.vers
-                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values = tab.slice();
                     this.sorted.values.sort((a, b) => a[2] < b[2])
                     this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
                 }
                 else if (data.part == "trad" && !this.sorted.trad) {
                     this.sorted.trad = !this.sorted.trad
-                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values = tab.slice();
                     this.sorted.values.sort((a, b) => a[3] > b[3] )
                     this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
                 }
                 else if (data.part == "trad" && this.sorted.trad) {
                     this.sorted.trad = !this.sorted.trad
-                    this.sorted.values = this.translations.values.slice();
+                    this.sorted.values = tab.slice();
                     this.sorted.values.sort((a, b) => a[3] < b[3])
                     this.pagination.values = divideArray(this.sorted.values, this.pagination.lignes);
                 }
                 else {
-                    this.pagination.values = divideArray(this.translations.values, this.pagination.lignes);
+                    this.pagination.values = divideArray(tab, this.pagination.lignes);
                 }
 
                 break;
@@ -733,9 +772,9 @@ view = {
               </div>
               <div class="col-sm-5 col-12">
                 <div class="input-group mb-3">
-                  <input value="" id="expressionText" type="text" class="form-control"  onchange="actions.addTrad({e:event})" placeholder="Expression..." />
+                  <input value="${model.request.expression}" id="expressionText" type="text" class="form-control"  onchange="actions.changeExp({e:event})" placeholder="Expression..." />
                   <div class="input-group-append">
-                    <button class="btn btn-primary" type="button" ${disable}>Traduire</button>
+                    <button class="btn btn-primary" type="button" onclick="actions.addTrad()" ${disable}>Traduire</button>
                   </div>
                 </div>
               </div>
@@ -815,7 +854,7 @@ view = {
               <td class="text-center">
                 <span class="badge badge-info">${v[2]}</span>
               </td>
-              <td>${v[3]}</td>
+              <td ${(v[2] == 'ar') ? `class="text-right"`: ``} >${v[3]}</td>
               <td class="text-center">
                 <div class="form-check">
                   <input type="checkbox" ${(model.marked.selected[Ar.indexOf(v)].selected) ? `checked="checked" ` : ``}onclick = "actions.selected({index : ${Ar.indexOf(v)}})" class="form-check-input" />
